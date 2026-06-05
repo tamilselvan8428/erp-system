@@ -4,7 +4,7 @@ import {
   TrendingUp, Award, Briefcase, Landmark, 
   Building2, GraduationCap, RefreshCw, BarChart2
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar } from 'recharts';
 
 export const PrincipalDashboard = () => {
   const { token } = useAuth();

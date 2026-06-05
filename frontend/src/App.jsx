@@ -13,6 +13,16 @@ import IQACDashboard from './pages/Dashboards/IQACDashboard.jsx';
 import PrincipalDashboard from './pages/Dashboards/PrincipalDashboard.jsx';
 import StudentDashboard from './pages/Dashboards/StudentDashboard.jsx';
 
+// Import sub-pages
+import FacultyActivities from './pages/FacultyActivities.jsx';
+import ResearchTracker from './pages/ResearchTracker.jsx';
+import EventsOutreach from './pages/EventsOutreach.jsx';
+import IndustryInteraction from './pages/IndustryInteraction.jsx';
+import StudentAchievements from './pages/StudentAchievements.jsx';
+import AccreditationIqac from './pages/AccreditationIqac.jsx';
+import ReportsPortal from './pages/ReportsPortal.jsx';
+import AdminControl from './pages/AdminControl.jsx';
+
 // Component to handle redirection to correct dashboard based on role
 const DashboardRouter = () => {
   const { user } = useAuth();
@@ -42,30 +52,6 @@ const DashboardRouter = () => {
   }
 };
 
-// Polished placeholder view for secondary sections
-const ModulePlaceholder = ({ name, description, activeEndpoint }) => {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center max-w-lg mx-auto mt-12 shadow-sm">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-primary text-2xl font-bold mb-4">
-        ✨
-      </div>
-      <h2 className="text-xl font-bold text-slate-800">{name} Module</h2>
-      <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-        {description || "The database schemas and API controllers are fully active. Data logged here maps directly to global audits and department rankings."}
-      </p>
-      <div className="mt-6 text-left border border-slate-100 bg-slate-50 rounded-xl p-4">
-        <span className="font-bold text-xs text-primary block mb-1">Backend Integration active:</span>
-        <code className="text-[10px] text-slate-600 block bg-slate-200/50 p-1.5 rounded select-all mb-2">
-          {activeEndpoint || `/api/${name.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-        </code>
-        <span className="text-[10px] text-slate-400 font-medium">
-          All actions in this area trigger audit logs, verification tasks, and notification updates for department heads and administrators.
-        </span>
-      </div>
-    </div>
-  );
-};
-
 // Main layout frame with navigation drawer
 const MainLayout = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -78,86 +64,14 @@ const MainLayout = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Routes>
             <Route path="/" element={<DashboardRouter />} />
-            <Route 
-              path="/faculty-activities" 
-              element={
-                <ModulePlaceholder 
-                  name="Faculty Development" 
-                  description="Log and edit Faculty Development Programs (FDPs), Short-Term Training Programs (STTPs), and guest lectures."
-                  activeEndpoint="/api/faculty"
-                />
-              } 
-            />
-            <Route 
-              path="/research-tracker" 
-              element={
-                <ModulePlaceholder 
-                  name="Research Tracker" 
-                  description="Publish and search journals, conferences, books, book chapters, patent applications, and project funding grants."
-                  activeEndpoint="/api/research/publications"
-                />
-              } 
-            />
-            <Route 
-              path="/events-outreach" 
-              element={
-                <ModulePlaceholder 
-                  name="Events & Outreach" 
-                  description="Manage national conferences, workshops, symposia, hackathons, project expos, and student outreach campaigns."
-                  activeEndpoint="/api/events"
-                />
-              } 
-            />
-            <Route 
-              path="/industry-interaction" 
-              element={
-                <ModulePlaceholder 
-                  name="Industry Interaction" 
-                  description="Track MOUs, industrial visits, guest lectures, student internships, and corporate consultancy programs."
-                  activeEndpoint="/api/industry"
-                />
-              } 
-            />
-            <Route 
-              path="/student-achievements" 
-              element={
-                <ModulePlaceholder 
-                  name="Student Achievements" 
-                  description="Submit and review student placement records, external awards, hackathon prizes, and global certification programs."
-                  activeEndpoint="/api/student"
-                />
-              } 
-            />
-            <Route 
-              path="/accreditation-iqac" 
-              element={
-                <ModulePlaceholder 
-                  name="Accreditation & IQAC" 
-                  description="Perform NAAC/NBA/NIRF comparative audits, map criterion indicators, and audit department closure timelines."
-                  activeEndpoint="/api/iqac/analytics"
-                />
-              } 
-            />
-            <Route 
-              path="/reports" 
-              element={
-                <ModulePlaceholder 
-                  name="Reports Portal" 
-                  description="Generate, filter, and export PDF or Excel reports for NAAC, NBA, and overall departmental performance metrics."
-                  activeEndpoint="/api/reports/export?format=pdf&reportType=faculty"
-                />
-              } 
-            />
-            <Route 
-              path="/admin" 
-              element={
-                <ModulePlaceholder 
-                  name="Admin Control" 
-                  description="Manage institutional system user roles, access tokens, modify profiles, and browse global activity audit logs."
-                  activeEndpoint="/api/admin/audit-logs"
-                />
-              } 
-            />
+            <Route path="/faculty-activities" element={<FacultyActivities />} />
+            <Route path="/research-tracker" element={<ResearchTracker />} />
+            <Route path="/events-outreach" element={<EventsOutreach />} />
+            <Route path="/industry-interaction" element={<IndustryInteraction />} />
+            <Route path="/student-achievements" element={<StudentAchievements />} />
+            <Route path="/accreditation-iqac" element={<AccreditationIqac />} />
+            <Route path="/reports" element={<ReportsPortal />} />
+            <Route path="/admin" element={<AdminControl />} />
           </Routes>
         </main>
       </div>
