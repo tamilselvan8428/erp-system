@@ -1,11 +1,10 @@
-import { connectDB } from '../config/db.js';
-import { User } from '../models/User.js';
+process.env.USE_MOCK_DB = 'true';
+const { connectDB } = await import('../config/db.js');
+const { User } = await import('../models/User.js');
 
 const runTests = async () => {
   console.log('🧪 Starting Database and Model Tests...');
   
-  // Set USE_MOCK_DB manually to true to run tests in mock mode
-  process.env.USE_MOCK_DB = 'true';
   await connectDB();
 
   try {
