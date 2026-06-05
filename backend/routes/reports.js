@@ -7,11 +7,11 @@ import { StudentAchievement } from '../models/StudentAchievement.js';
 import { User } from '../models/User.js';
 import { generatePDFReport } from '../utils/pdfGenerator.js';
 import { generateExcelReport } from '../utils/excelGenerator.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/export', protect, async (req, res) => {
+router.get('/export', protect, authorize('Faculty', 'HOD', 'IQAC', 'Principal', 'Admin'), async (req, res) => {
   const { format, reportType, facultyId, department, academicYear } = req.query;
 
   if (!format || !reportType) {

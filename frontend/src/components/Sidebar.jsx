@@ -35,7 +35,9 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
       items.push({ name: 'Accreditation & IQAC', path: '/accreditation-iqac', icon: Shield });
     }
 
-    items.push({ name: 'Reports Portal', path: '/reports', icon: FileText });
+    if (role !== 'Student') {
+      items.push({ name: 'Reports Portal', path: '/reports', icon: FileText });
+    }
 
     if (role === 'Admin' || role === 'Principal') {
       items.push({ name: 'Institutional Control', path: '/admin', icon: Settings });

@@ -5,7 +5,20 @@ import {
 } from 'lucide-react';
 
 export const ReportsPortal = () => {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
+  
+  if (user?.role === 'Student') {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <AlertTriangle className="text-danger h-12 w-12 animate-bounce" />
+        <h2 className="text-base font-bold text-slate-800">Access Restricted</h2>
+        <p className="text-xs text-slate-500 max-w-md">
+          Students are not authorized to access the institutional Reports Portal. Please contact your department administration if you require any academic reports.
+        </p>
+      </div>
+    );
+  }
+
   const [reportType, setReportType] = useState('faculty');
   const [format, setFormat] = useState('pdf');
   const [department, setDepartment] = useState('CSE');
