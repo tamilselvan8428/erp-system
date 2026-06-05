@@ -22,7 +22,7 @@ router.get('/', protect, async (req, res) => {
 
   // Role based scoping
   if (req.user.role === 'Faculty') {
-    query.facultyId = String(req.user._id);
+    query.department = req.user.department;
   } else if (req.user.role === 'Student') {
     return res.status(403).json({ message: 'Students cannot access faculty records' });
   } else if (req.user.role === 'HOD') {

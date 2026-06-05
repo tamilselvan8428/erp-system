@@ -4,6 +4,7 @@ import {
   BookOpen, Award, Landmark, PlusCircle, Trash2, 
   Calendar, FileText, CheckCircle, AlertTriangle, RefreshCw
 } from 'lucide-react';
+import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const ResearchTracker = () => {
   const { user, token } = useAuth();
@@ -45,6 +46,11 @@ export const ResearchTracker = () => {
   const [grantStart, setGrantStart] = useState('');
   const [grantEnd, setGrantEnd] = useState('');
   const [grantStatus, setGrantStatus] = useState('Ongoing');
+
+  // Upload lists
+  const [pubAttachments, setPubAttachments] = useState([]);
+  const [patAttachments, setPatAttachments] = useState([]);
+  const [grantAttachments, setGrantAttachments] = useState([]);
 
   const loadData = async () => {
     try {
@@ -98,7 +104,7 @@ export const ResearchTracker = () => {
           doi: pubDoi,
           impactFactor: pubImpact ? Number(pubImpact) : undefined,
           indexing: indexingArr,
-          attachments: [{ name: 'Publication Proof', url: '/uploads/sample-cert.pdf' }]
+          attachments: pubAttachments
         })
       });
       const data = await res.json();
@@ -112,6 +118,7 @@ export const ResearchTracker = () => {
       setPubDate('');
       setPubDoi('');
       setPubImpact('');
+      setPubAttachments([]);
       loadData();
     } catch (err) {
       setFormError(err.message);
@@ -138,7 +145,7 @@ export const ResearchTracker = () => {
           filingDate: patFilingDate,
           status: patStatus,
           country: patCountry,
-          attachments: [{ name: 'Patent Patent Doc', url: '/uploads/sample-cert.pdf' }]
+          attachments: patAttachments
         })
       });
       const data = await res.json();
@@ -148,6 +155,7 @@ export const ResearchTracker = () => {
       setPatTitle('');
       setPatAppNo('');
       setPatFilingDate('');
+      setPatAttachments([]);
       loadData();
     } catch (err) {
       setFormError(err.message);
@@ -177,7 +185,7 @@ export const ResearchTracker = () => {
           startDate: grantStart,
           endDate: grantEnd,
           status: grantStatus,
-          attachments: [{ name: 'Grant Approval Order', url: '/uploads/sample-cert.pdf' }]
+          attachments: grantAttachments
         })
       });
       const data = await res.json();
@@ -190,6 +198,7 @@ export const ResearchTracker = () => {
       setGrantYears(1);
       setGrantStart('');
       setGrantEnd('');
+      setGrantAttachments([]);
       loadData();
     } catch (err) {
       setFormError(err.message);
@@ -318,6 +327,7 @@ export const ResearchTracker = () => {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Indexing (Comma separated)</label>
                   <input type="text" placeholder="Scopus, Web of Science" value={pubIndexing} onChange={(e) => setPubIndexing(e.target.value)} className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none" />
                 </div>
+                <EvidenceViewer attachments={pubAttachments} onChange={setPubAttachments} label="Upload Publication Evidence" />
                 <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Submit Publication</button>
               </form>
             )}
@@ -350,6 +360,7 @@ export const ResearchTracker = () => {
                     <option value="Granted">Granted</option>
                   </select>
                 </div>
+                <EvidenceViewer attachments={patAttachments} onChange={setPatAttachments} label="Upload Patent Evidence/Doc" />
                 <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Register Patent</button>
               </form>
             )}
@@ -399,6 +410,7 @@ export const ResearchTracker = () => {
                     <option value="Completed">Completed</option>
                   </select>
                 </div>
+                <EvidenceViewer attachments={grantAttachments} onChange={setGrantAttachments} label="Upload Grant/Project Proofs" />
                 <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Log Grant Project</button>
               </form>
             )}
@@ -430,6 +442,22 @@ export const ResearchTracker = () => {
                             <span key={i} className="text-[8px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded font-medium">{ind}</span>
                           ))}
                         </div>
+                        {p.attachments && p.attachments.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
+                            {p.attachments.map((att, idx) => (
+                              <a 
+                                key={idx}
+                                href={att.url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition max-w-[150px] truncate"
+                                title={att.name}
+                              >
+                                <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                         {p.rejectionReason && p.verificationStatus === 'Rejected' && (
                           <div className="mt-3 flex items-start gap-1 rounded bg-danger/5 p-2 text-[10px] text-danger border border-danger/10">
                             <AlertTriangle size={12} className="shrink-0 mt-0.5" />
@@ -469,6 +497,22 @@ export const ResearchTracker = () => {
                           <span>•</span>
                           <span>Filed: {new Date(p.filingDate).toLocaleDateString()}</span>
                         </div>
+                        {p.attachments && p.attachments.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
+                            {p.attachments.map((att, idx) => (
+                              <a 
+                                key={idx}
+                                href={att.url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition max-w-[150px] truncate"
+                                title={att.name}
+                              >
+                                <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-warning-light text-warning border border-warning/10">{p.status}</span>
@@ -498,6 +542,22 @@ export const ResearchTracker = () => {
                           <span className="text-slate-700">Amount: ₹{g.amountSanctioned?.toLocaleString()}</span>
                         </div>
                         <p className="text-[9px] text-slate-400 mt-1">Duration: {g.durationYears} Years ({new Date(g.startDate).toLocaleDateString()} to {new Date(g.endDate).toLocaleDateString()})</p>
+                        {g.attachments && g.attachments.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
+                            {g.attachments.map((att, idx) => (
+                              <a 
+                                key={idx}
+                                href={att.url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition max-w-[150px] truncate"
+                                title={att.name}
+                              >
+                                <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-600 border border-purple-100">{g.status}</span>

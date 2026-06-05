@@ -17,7 +17,7 @@ router.get('/', protect, async (req, res) => {
   if (type) query.type = type;
 
   if (req.user.role === 'Faculty') {
-    query.organizerId = String(req.user._id);
+    query.department = req.user.department;
   } else if (req.user.role === 'HOD') {
     query.department = req.user.department;
     if (organizerId) query.organizerId = organizerId;

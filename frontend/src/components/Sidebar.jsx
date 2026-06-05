@@ -37,8 +37,8 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
 
     items.push({ name: 'Reports Portal', path: '/reports', icon: FileText });
 
-    if (role === 'Admin') {
-      items.push({ name: 'Admin Control', path: '/admin', icon: Settings });
+    if (role === 'Admin' || role === 'Principal') {
+      items.push({ name: 'Institutional Control', path: '/admin', icon: Settings });
     }
 
     return items;

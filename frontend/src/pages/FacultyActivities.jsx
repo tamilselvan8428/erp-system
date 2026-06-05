@@ -4,6 +4,8 @@ import {
   Award, Calendar, Clock, PlusCircle, Trash2, 
   AlertTriangle, CheckCircle, Info, RefreshCw, FileText
 } from 'lucide-react';
+import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
+
 
 export const FacultyActivities = () => {
   const { user, token } = useAuth();
@@ -19,7 +21,7 @@ export const FacultyActivities = () => {
   const [duration, setDuration] = useState(1);
   const [role, setRole] = useState('Participant');
   const [participantsCount, setParticipantsCount] = useState(0);
-  const [attachmentUrl, setAttachmentUrl] = useState('/uploads/sample-cert.pdf');
+  const [attachments, setAttachments] = useState([]);
 
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -63,7 +65,7 @@ export const FacultyActivities = () => {
           duration: Number(duration),
           role,
           participantsCount: Number(participantsCount),
-          attachments: [{ name: 'Certificate', url: attachmentUrl }]
+          attachments: attachments
         })
       });
 
@@ -80,6 +82,7 @@ export const FacultyActivities = () => {
       setDuration(1);
       setRole('Participant');
       setParticipantsCount(0);
+      setAttachments([]);
       loadActivities();
     } catch (err) {
       setFormError(err.message);
@@ -246,13 +249,7 @@ export const FacultyActivities = () => {
               )}
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Attachment / Certificate URL</label>
-                <input 
-                  type="text" 
-                  value={attachmentUrl}
-                  onChange={(e) => setAttachmentUrl(e.target.value)}
-                  className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
-                />
+                <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Proof / Photos / Certificates" />
               </div>
 
               <button
@@ -309,17 +306,19 @@ export const FacultyActivities = () => {
                         {act.verificationStatus}
                       </span>
 
-                      <div className="flex items-center gap-2 mt-1">
-                        {act.attachments?.[0] && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        {act.attachments && act.attachments.map((att, idx) => (
                           <a 
-                            href={act.attachments[0].url} 
+                            key={idx}
+                            href={att.url} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition"
+                            className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition max-w-[120px] truncate"
+                            title={att.name}
                           >
-                            <FileText size={10} /> Certificate
+                            <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
                           </a>
-                        )}
+                        ))}
 
                         {user?.role === 'Faculty' && (act.verificationStatus === 'Pending' || act.verificationStatus === 'Rejected') && (
                           <button 

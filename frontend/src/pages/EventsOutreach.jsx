@@ -4,6 +4,7 @@ import {
   Calendar, MapPin, Users, PlusCircle, Trash2, 
   RefreshCw, FileText, CheckCircle, AlertTriangle
 } from 'lucide-react';
+import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const EventsOutreach = () => {
   const { user, token } = useAuth();
@@ -22,6 +23,7 @@ export const EventsOutreach = () => {
   const [participantsCount, setParticipantsCount] = useState(0);
   const [budgetSanctioned, setBudgetSanctioned] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
+  const [attachments, setAttachments] = useState([]);
 
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -68,7 +70,7 @@ export const EventsOutreach = () => {
           participantsCount: Number(participantsCount),
           budgetSanctioned: Number(budgetSanctioned),
           budgetSpent: Number(budgetSpent),
-          attachments: [{ name: 'Event Report', url: '/uploads/sample-cert.pdf' }]
+          attachments: attachments
         })
       });
 
@@ -84,6 +86,7 @@ export const EventsOutreach = () => {
       setParticipantsCount(0);
       setBudgetSanctioned(0);
       setBudgetSpent(0);
+      setAttachments([]);
       loadEvents();
     } catch (err) {
       setFormError(err.message);
@@ -205,6 +208,8 @@ export const EventsOutreach = () => {
                 </div>
               </div>
 
+              <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Event Proof / Photos" />
+
               <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Log Organized Event</button>
             </form>
           </div>
@@ -231,6 +236,22 @@ export const EventsOutreach = () => {
                         <span className="flex items-center gap-1"><Users size={10} /> {ev.participantsCount} participants</span>
                         <span>Budget: ₹{ev.budgetSpent?.toLocaleString()} spent / ₹{ev.budgetSanctioned?.toLocaleString()} sanctioned</span>
                       </div>
+                      {ev.attachments && ev.attachments.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
+                          {ev.attachments.map((att, idx) => (
+                            <a 
+                              key={idx}
+                              href={att.url} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition max-w-[150px] truncate"
+                              title={att.name}
+                            >
+                              <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       {ev.rejectionReason && ev.verificationStatus === 'Rejected' && (
                         <div className="mt-3 flex items-start gap-1 rounded bg-danger/5 p-2.5 text-[10px] text-danger border border-danger/10">
                           <AlertTriangle size={12} className="shrink-0 mt-0.5" />

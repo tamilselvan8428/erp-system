@@ -4,6 +4,7 @@ import {
   Award, PlusCircle, Trash2, Calendar, 
   RefreshCw, FileText, CheckCircle, AlertTriangle
 } from 'lucide-react';
+import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const StudentAchievements = () => {
   const { user, token } = useAuth();
@@ -16,6 +17,7 @@ export const StudentAchievements = () => {
   const [org, setOrg] = useState('');
   const [details, setDetails] = useState('');
   const [dateOccurred, setDateOccurred] = useState('');
+  const [attachments, setAttachments] = useState([]);
 
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -56,7 +58,7 @@ export const StudentAchievements = () => {
           organization: org,
           details,
           dateOccurred,
-          attachments: [{ name: 'Evidence Document', url: '/uploads/sample-offer.pdf' }]
+          attachments: attachments
         })
       });
 
@@ -68,6 +70,7 @@ export const StudentAchievements = () => {
       setOrg('');
       setDetails('');
       setDateOccurred('');
+      setAttachments([]);
       loadAchievements();
     } catch (err) {
       setFormError(err.message);
@@ -157,6 +160,8 @@ export const StudentAchievements = () => {
                 <input type="text" placeholder="e.g. Stipend: Rs. 20,000/month or Cash Prize: Rs. 50,000" value={details} onChange={(e) => setDetails(e.target.value)} className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none" />
               </div>
 
+              <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Placement Offer / Certificate / Photos" />
+
               <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Submit Achievement</button>
             </form>
           </div>
@@ -183,6 +188,22 @@ export const StudentAchievements = () => {
                         <span>•</span>
                         <span className="flex items-center gap-1"><Calendar size={10} /> Date: {new Date(ach.dateOccurred).toLocaleDateString()}</span>
                       </div>
+                      {ach.attachments && ach.attachments.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
+                          {ach.attachments.map((att, idx) => (
+                            <a 
+                              key={idx}
+                              href={att.url} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition max-w-[150px] truncate"
+                              title={att.name}
+                            >
+                              <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       {ach.rejectionReason && ach.verificationStatus === 'Rejected' && (
                         <div className="mt-3 flex items-start gap-1 rounded bg-danger/5 p-2 text-[10px] text-danger border border-danger/10">
                           <AlertTriangle size={12} className="shrink-0 mt-0.5" />

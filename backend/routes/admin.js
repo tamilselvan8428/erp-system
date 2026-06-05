@@ -2,14 +2,19 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { AuditLog } from '../models/AuditLog.js';
+import { Department } from '../models/Department.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import { logAudit } from '../middleware/auditMiddleware.js';
 
 const router = express.Router();
 
+// =========================================================================
+// USER MANAGEMENT SECTION (Authorized for Admin and Principal)
+// =========================================================================
+
 // @desc    Get all users
 // @route   GET /api/admin/users
-router.get('/users', protect, authorize('Admin'), async (req, res) => {
+router.get('/users', protect, authorize('Admin', 'Principal'), async (req, res) => {
   try {
     const list = await User.find({}).sort({ role: 1, name: 1 });
     res.json(list);
@@ -20,7 +25,7 @@ router.get('/users', protect, authorize('Admin'), async (req, res) => {
 
 // @desc    Create a new user
 // @route   POST /api/admin/users
-router.post('/users', protect, authorize('Admin'), async (req, res) => {
+router.post('/users', protect, authorize('Admin', 'Principal'), async (req, res) => {
   const { name, email, password, role, department, designation, studentId, facultyId, academicYear } = req.body;
 
   if (!name || !email || !password || !role || !department || !academicYear) {
@@ -68,7 +73,7 @@ router.post('/users', protect, authorize('Admin'), async (req, res) => {
 
 // @desc    Update user details
 // @route   PUT /api/admin/users/:id
-router.put('/users/:id', protect, authorize('Admin'), async (req, res) => {
+router.put('/users/:id', protect, authorize('Admin', 'Principal'), async (req, res) => {
   const { id } = req.params;
   const { name, email, role, department, designation, active, apiScore } = req.body;
 
@@ -98,7 +103,7 @@ router.put('/users/:id', protect, authorize('Admin'), async (req, res) => {
 
 // @desc    Delete user
 // @route   DELETE /api/admin/users/:id
-router.delete('/users/:id', protect, authorize('Admin'), async (req, res) => {
+router.delete('/users/:id', protect, authorize('Admin', 'Principal'), async (req, res) => {
   const { id } = req.params;
   try {
     const user = await User.findById(id);
@@ -113,9 +118,63 @@ router.delete('/users/:id', protect, authorize('Admin'), async (req, res) => {
   }
 });
 
+// =========================================================================
+// DEPARTMENT MANAGEMENT SECTION
+// =========================================================================
+
+// @desc    Get all departments (authenticated)
+// @route   GET /api/admin/departments
+router.get('/departments', protect, async (req, res) => {
+  try {
+    const list = await Department.find({}).sort({ code: 1 });
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching departments', error: err.message });
+  }
+});
+
+// @desc    Create new department (Admin/Principal only)
+// @route   POST /api/admin/departments
+router.post('/departments', protect, authorize('Admin', 'Principal'), async (req, res) => {
+  const { name, code } = req.body;
+  if (!name || !code) {
+    return res.status(400).json({ message: 'Please provide both name and code' });
+  }
+  try {
+    const exists = await Department.findOne({ code: code.toUpperCase() });
+    if (exists) {
+      return res.status(400).json({ message: 'Department already exists with this code' });
+    }
+    const newDept = await Department.create({ name, code: code.toUpperCase() });
+    await logAudit(req, 'CREATE_DEPARTMENT', `Created department: ${code.toUpperCase()}`, null, newDept);
+    res.status(201).json(newDept);
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating department', error: err.message });
+  }
+});
+
+// @desc    Delete department (Admin/Principal only)
+// @route   DELETE /api/admin/departments/:id
+router.delete('/departments/:id', protect, authorize('Admin', 'Principal'), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const dept = await Department.findById(id);
+    if (!dept) return res.status(404).json({ message: 'Department not found' });
+    await Department.findByIdAndDelete(id);
+    await logAudit(req, 'DELETE_DEPARTMENT', `Deleted department: ${dept.code}`, dept, null);
+    res.json({ message: 'Department deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting department', error: err.message });
+  }
+});
+
+// =========================================================================
+// SYSTEM AUDIT LOGS SECTION
+// =========================================================================
+
 // @desc    Get all system audit logs
 // @route   GET /api/admin/audit-logs
-router.get('/audit-logs', protect, authorize('Admin'), async (req, res) => {
+router.get('/audit-logs', protect, authorize('Admin', 'Principal'), async (req, res) => {
   const { action, userId } = req.query;
   const query = {};
   if (action) query.action = action;
@@ -130,3 +189,4 @@ router.get('/audit-logs', protect, authorize('Admin'), async (req, res) => {
 });
 
 export default router;
+

@@ -4,6 +4,7 @@ import {
   Building2, PlusCircle, Trash2, Mail, 
   Calendar, RefreshCw, FileText, CheckCircle, AlertTriangle
 } from 'lucide-react';
+import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const IndustryInteraction = () => {
   const { user, token } = useAuth();
@@ -18,6 +19,7 @@ export const IndustryInteraction = () => {
   const [dateOccurred, setDateOccurred] = useState('');
   const [validityEndDate, setValidityEndDate] = useState('');
   const [description, setDescription] = useState('');
+  const [attachments, setAttachments] = useState([]);
 
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -60,7 +62,7 @@ export const IndustryInteraction = () => {
           dateOccurred,
           validityEndDate: type === 'MoU' ? validityEndDate : undefined,
           description,
-          attachments: [{ name: 'MoU Document', url: '/uploads/sample-cert.pdf' }]
+          attachments: attachments
         })
       });
 
@@ -74,6 +76,7 @@ export const IndustryInteraction = () => {
       setDateOccurred('');
       setValidityEndDate('');
       setDescription('');
+      setAttachments([]);
       loadLinks();
     } catch (err) {
       setFormError(err.message);
@@ -176,6 +179,8 @@ export const IndustryInteraction = () => {
                 <textarea placeholder="e.g. Internships and research collaboration terms" value={description} onChange={(e) => setDescription(e.target.value)} className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none" rows="2" />
               </div>
 
+              <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Collaboration Proofs" />
+
               <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Log Industry Link</button>
             </form>
           </div>
@@ -204,6 +209,22 @@ export const IndustryInteraction = () => {
                           <span className="font-bold">Expires: {new Date(link.validityEndDate).toLocaleDateString()}</span>
                         )}
                       </div>
+                      {link.attachments && link.attachments.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
+                          {link.attachments.map((att, idx) => (
+                            <a 
+                              key={idx}
+                              href={att.url} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-[9px] font-bold text-primary border border-primary/20 px-2 py-0.5 rounded bg-white hover:bg-primary-light/30 transition max-w-[150px] truncate"
+                              title={att.name}
+                            >
+                              <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       {link.rejectionReason && link.verificationStatus === 'Rejected' && (
                         <div className="mt-3 flex items-start gap-1 rounded bg-danger/5 p-2 text-[10px] text-danger border border-danger/10">
                           <AlertTriangle size={12} className="shrink-0 mt-0.5" />

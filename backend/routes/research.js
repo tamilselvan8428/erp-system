@@ -38,7 +38,7 @@ router.get('/publications', protect, async (req, res) => {
   if (status) query.verificationStatus = status;
 
   if (req.user.role === 'Faculty') {
-    query.authorId = String(req.user._id);
+    query.department = req.user.department;
   } else if (req.user.role === 'HOD') {
     query.department = req.user.department;
     if (authorId) query.authorId = authorId;
@@ -188,7 +188,7 @@ router.get('/patents', protect, async (req, res) => {
   if (status) query.verificationStatus = status;
 
   if (req.user.role === 'Faculty') {
-    query.inventorId = String(req.user._id);
+    query.department = req.user.department;
   } else if (req.user.role === 'HOD') {
     query.department = req.user.department;
     if (inventorId) query.inventorId = inventorId;
@@ -332,7 +332,7 @@ router.get('/grants', protect, async (req, res) => {
   if (status) query.verificationStatus = status;
 
   if (req.user.role === 'Faculty') {
-    query.investigatorId = String(req.user._id);
+    query.department = req.user.department;
   } else if (req.user.role === 'HOD') {
     query.department = req.user.department;
     if (investigatorId) query.investigatorId = investigatorId;

@@ -13,6 +13,8 @@ import { Publication } from './models/Publication.js';
 import { Patent } from './models/Patent.js';
 import { GrantAndProject } from './models/GrantAndProject.js';
 import { StudentAchievement } from '../backend/models/StudentAchievement.js';
+import { Department } from './models/Department.js';
+
 
 import authRoutes from './routes/auth.js';
 import facultyRoutes from './routes/faculty.js';
@@ -42,17 +44,40 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 }
 app.use('/uploads', express.static(UPLOAD_DIR));
 
-// File Upload endpoint
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
-  res.json({
-    name: req.file.originalname,
-    url: `/uploads/${req.file.filename}`,
-    type: req.file.mimetype
+// File Upload endpoint supporting multiple files and folder uploads
+app.post('/api/upload', (req, res) => {
+  const uploadHandler = upload.array('files', 150);
+  uploadHandler(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    // Fallback if client used 'file' instead of 'files'
+    if (!req.files || req.files.length === 0) {
+      const singleUploadHandler = upload.single('file');
+      singleUploadHandler(req, res, (singleErr) => {
+        if (singleErr) {
+          return res.status(400).json({ message: singleErr.message });
+        }
+        if (!req.file) {
+          return res.status(400).json({ message: 'No files uploaded' });
+        }
+        return res.json([{
+          name: req.file.originalname,
+          url: `/uploads/${req.file.filename}`,
+          type: req.file.mimetype
+        }]);
+      });
+      return;
+    }
+    const uploadedFiles = req.files.map(file => ({
+      name: file.originalname,
+      url: `/uploads/${file.filename}`,
+      type: file.mimetype
+    }));
+    return res.json(uploadedFiles);
   });
 });
+
 
 // Register routes
 app.use('/api/auth', authRoutes);
@@ -71,10 +96,27 @@ app.get('/api/health', (req, res) => res.json({ status: 'OK', database: process.
 // Seed function
 const seedDemoData = async () => {
   try {
+    const deptCount = await Department.countDocuments();
+    if (deptCount === 0) {
+      console.log('🌱 Seeding default departments...');
+      const defaultDepts = [
+        { name: 'Computer Science & Engineering', code: 'CSE' },
+        { name: 'Electronics & Communication Engineering', code: 'ECE' },
+        { name: 'Electrical & Electronics Engineering', code: 'EEE' },
+        { name: 'Mechanical Engineering', code: 'MECH' },
+        { name: 'Civil Engineering', code: 'CIVIL' },
+        { name: 'Information Technology', code: 'IT' }
+      ];
+      for (const d of defaultDepts) {
+        await Department.create(d);
+      }
+    }
+
     const count = await User.countDocuments();
     if (count > 0) return;
 
     console.log('🌱 Database is empty. Seeding default user roles and academic datasets...');
+
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash('Password123', salt);
 
