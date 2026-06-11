@@ -2,9 +2,18 @@ import React, { useState } from 'react';
 import { FileUp, FolderUp, Eye, Trash2, History, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 
-export const EvidenceViewer = ({ attachments = [], onChange, label = "Evidence Documents" }) => {
+export const EvidenceViewer = ({ attachments = [], onChange, label = "Evidence Documents", proofMethods = [] }) => {
   const [uploading, setUploading] = useState(false);
   const { token } = useAuth();
+
+  const handleTypeChange = (index, newType) => {
+    const nextList = [...attachments];
+    nextList[index] = {
+      ...nextList[index],
+      type: newType
+    };
+    onChange(nextList);
+  };
 
   const uploadFiles = async (files) => {
     if (!files || files.length === 0) return;
@@ -32,12 +41,14 @@ export const EvidenceViewer = ({ attachments = [], onChange, label = "Evidence D
         const nextList = [...attachments];
         data.forEach(file => {
           const dupIdx = nextList.findIndex(a => a.name.toLowerCase() === file.name.toLowerCase());
+          const defaultType = proofMethods.length > 0 ? proofMethods[0] : 'Certificate';
           
           if (dupIdx >= 0) {
             const prevVer = nextList[dupIdx].version || 1;
             nextList[dupIdx] = {
               name: file.name,
               url: file.url,
+              type: nextList[dupIdx].type || defaultType,
               version: prevVer + 1,
               uploadedAt: new Date().toISOString()
             };
@@ -45,6 +56,7 @@ export const EvidenceViewer = ({ attachments = [], onChange, label = "Evidence D
             nextList.push({
               name: file.name,
               url: file.url,
+              type: defaultType,
               version: 1,
               uploadedAt: new Date().toISOString()
             });
@@ -86,11 +98,11 @@ export const EvidenceViewer = ({ attachments = [], onChange, label = "Evidence D
         ) : (
           attachments.map((item, idx) => (
             <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-2.5">
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-primary-light text-primary font-bold text-[10px]">
                   {item.name.split('.').pop()?.toUpperCase() || 'FILE'}
                 </div>
-                <div className="min-w-0 flex flex-col">
+                <div className="min-w-0 flex flex-col flex-1">
                   <span className="text-xs font-medium text-slate-800 truncate block">{item.name}</span>
                   <div className="flex items-center gap-2 mt-0.5 text-[9px] text-slate-400">
                     <span className="flex items-center gap-0.5 font-bold text-primary bg-primary-light/50 px-1 rounded">
@@ -98,6 +110,28 @@ export const EvidenceViewer = ({ attachments = [], onChange, label = "Evidence D
                     </span>
                     <span>•</span>
                     <span>{new Date(item.uploadedAt || Date.now()).toLocaleDateString()}</span>
+                  </div>
+                  
+                  {/* Proof Method Dropdown Select */}
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase">Proof Type:</span>
+                    <select
+                      value={item.type || (proofMethods.length > 0 ? proofMethods[0] : 'Certificate')}
+                      onChange={(e) => handleTypeChange(idx, e.target.value)}
+                      className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-bold text-slate-600 focus:outline-none"
+                    >
+                      {proofMethods.map((pm, pIdx) => (
+                        <option key={pIdx} value={pm}>{pm}</option>
+                      ))}
+                      {proofMethods.length === 0 && (
+                        <>
+                          <option value="Certificate">Certificate</option>
+                          <option value="Brochure">Brochure</option>
+                          <option value="Attendance">Attendance</option>
+                          <option value="Report">Report</option>
+                        </>
+                      )}
+                    </select>
                   </div>
                 </div>
               </div>

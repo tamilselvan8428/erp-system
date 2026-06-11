@@ -45,7 +45,7 @@ router.get('/', protect, async (req, res) => {
 // @desc    Create new activity
 // @route   POST /api/faculty
 router.post('/', protect, authorize('Faculty', 'HOD', 'Admin'), async (req, res) => {
-  const { type, title, organizer, startDate, endDate, duration, role, participantsCount, attachments } = req.body;
+  const { type, title, organizer, startDate, endDate, duration, role, participantsCount, attachments, customFields } = req.body;
 
   try {
     // Auto-map accreditation fields
@@ -67,6 +67,7 @@ router.post('/', protect, authorize('Faculty', 'HOD', 'Admin'), async (req, res)
       role,
       participantsCount: participantsCount || 0,
       attachments: attachments || [],
+      customFields: customFields || {},
       accreditationMapping,
       verificationStatus: 'Pending'
     });

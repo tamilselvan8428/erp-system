@@ -14,6 +14,7 @@ import { Patent } from './models/Patent.js';
 import { GrantAndProject } from './models/GrantAndProject.js';
 import { StudentAchievement } from '../backend/models/StudentAchievement.js';
 import { Department } from './models/Department.js';
+import { FormConfig } from './models/FormConfig.js';
 
 
 import authRoutes from './routes/auth.js';
@@ -96,6 +97,18 @@ app.get('/api/health', (req, res) => res.json({ status: 'OK', database: process.
 // Seed function
 const seedDemoData = async () => {
   try {
+    // Seed default FormConfig
+    const formConfigCount = await FormConfig.countDocuments({ formName: 'FacultyActivity' });
+    if (formConfigCount === 0) {
+      console.log('🌱 Seeding default FacultyActivity form configuration...');
+      await FormConfig.create({
+        formName: 'FacultyActivity',
+        categories: ['FDP', 'STTP', 'Workshop', 'Online Course', 'Resource Person'],
+        proofMethods: ['Certificate', 'Brochure', 'Attendance', 'Report'],
+        fields: []
+      });
+    }
+
     const deptCount = await Department.countDocuments();
     if (deptCount === 0) {
       console.log('🌱 Seeding default departments...');

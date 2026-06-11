@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export const Navbar = ({ onMobileToggle }) => {
   const { user, logout, login } = useAuth();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, clearAllNotifications } = useNotifications();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isSwitchOpen, setIsSwitchOpen] = useState(false);
@@ -110,7 +110,14 @@ export const Navbar = ({ onMobileToggle }) => {
             <div className="absolute right-0 mt-2 w-80 origin-top-right rounded-lg bg-white shadow-xl border border-slate-200 z-50 overflow-hidden">
               <div className="flex items-center justify-between bg-primary px-4 py-3 text-white">
                 <span className="text-xs font-semibold">Notifications ({unreadCount} unread)</span>
-                <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded">Real-Time Alerts</span>
+                {notifications.length > 0 && (
+                  <button 
+                    onClick={clearAllNotifications}
+                    className="text-[10px] bg-white/20 hover:bg-white/30 px-2 py-0.5 rounded font-bold transition duration-150"
+                  >
+                    Clear All
+                  </button>
+                )}
               </div>
               <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
                 {notifications.length === 0 ? (
@@ -134,8 +141,16 @@ export const Navbar = ({ onMobileToggle }) => {
                   ))
                 )}
               </div>
-              <div className="bg-slate-50 p-2 text-center border-t border-slate-100">
-                <span className="text-[10px] text-slate-400 font-medium">End of System Log Alerts</span>
+              <div className="bg-slate-50 p-2 text-center border-t border-slate-100 flex items-center justify-between px-3">
+                <span className="text-[9px] text-slate-400 font-semibold uppercase">End of Alerts</span>
+                {notifications.length > 0 && (
+                  <button 
+                    onClick={clearAllNotifications}
+                    className="text-[10px] text-primary hover:text-primary-dark font-black tracking-wider hover:underline transition duration-150"
+                  >
+                    Clear All
+                  </button>
+                )}
               </div>
             </div>
           )}

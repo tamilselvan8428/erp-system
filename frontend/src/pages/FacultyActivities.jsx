@@ -50,6 +50,9 @@ export const FacultyActivities = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
+  const [formConfig, setFormConfig] = useState(null);
+  const [customFields, setCustomFields] = useState({});
+
   // Utility to determine academic year
   const getAcademicYearFromDate = (dateString) => {
     if (!dateString) return '2025-2026';
@@ -80,7 +83,8 @@ export const FacultyActivities = () => {
       eventName = item.type === 'FDP' ? 'Faculty Dev Program' : 
                   item.type === 'STTP' ? 'Short Term Training' : 
                   item.type === 'Workshop' ? 'Workshop Attended' : 
-                  item.type === 'Online Course' ? 'Online Course Completed' : 'Resource Person Invite';
+                  item.type === 'Online Course' ? 'Online Course Completed' : 
+                  item.type === 'Resource Person' ? 'Resource Person Invite' : item.type;
       authors = item.facultyName || '';
       role = item.role || 'Participant';
       publisherInfo = item.organizer || '';
@@ -153,7 +157,8 @@ export const FacultyActivities = () => {
       detailsText,
       role,
       originalModel: modelType,
-      originalData: item
+      originalData: item,
+      customFields: item.customFields || {}
     };
   };
 
@@ -209,8 +214,26 @@ export const FacultyActivities = () => {
     }
   };
 
+  const loadFormConfig = async () => {
+    try {
+      const res = await fetch('/api/admin/form-config/FacultyActivity', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFormConfig(data);
+        if (data.categories && data.categories.length > 0) {
+          setType(data.categories[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load form config:', err);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadFormConfig();
   }, [token]);
 
   // Compute counts for the filter deck dynamically based on ALL items
@@ -310,7 +333,8 @@ export const FacultyActivities = () => {
           duration: Number(duration),
           role,
           participantsCount: Number(participantsCount),
-          attachments
+          attachments,
+          customFields
         })
       });
 
@@ -328,6 +352,7 @@ export const FacultyActivities = () => {
       setRole('Participant');
       setParticipantsCount(0);
       setAttachments([]);
+      setCustomFields({});
       setIsDrawerOpen(false);
       loadData();
     } catch (err) {
@@ -898,6 +923,25 @@ export const FacultyActivities = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Custom Fields Details */}
+                  {selectedItem.customFields && Object.keys(selectedItem.customFields).length > 0 && (
+                    <div className="mt-4 border-t border-slate-200/60 pt-3 text-xs">
+                      <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Custom Activity Information</span>
+                      <div className="grid grid-cols-2 gap-3 bg-white border border-slate-100 p-3 rounded-xl mt-1">
+                        {Object.keys(selectedItem.customFields).map((key) => {
+                          const fConfig = formConfig?.fields?.find(f => f.name === key);
+                          const label = fConfig ? fConfig.label : key;
+                          return (
+                            <div key={key}>
+                              <span className="block text-[9px] text-slate-400 font-bold uppercase tracking-wider">{label}</span>
+                              <span className="font-semibold text-slate-700">{selectedItem.customFields[key] || '-'}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -992,11 +1036,18 @@ export const FacultyActivities = () => {
                     onChange={(e) => setType(e.target.value)}
                     className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   >
-                    <option value="FDP">FDP (Faculty Dev Program)</option>
-                    <option value="STTP">STTP (Short Term Training)</option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="Online Course">Online Course</option>
-                    <option value="Resource Person">Resource Person Invite</option>
+                    {formConfig?.categories?.map((cat, idx) => (
+                      <option key={idx} value={cat}>{cat}</option>
+                    ))}
+                    {!formConfig && (
+                      <>
+                        <option value="FDP">FDP (Faculty Dev Program)</option>
+                        <option value="STTP">STTP (Short Term Training)</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Online Course">Online Course</option>
+                        <option value="Resource Person">Resource Person Invite</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -1086,8 +1137,63 @@ export const FacultyActivities = () => {
                 )}
 
                 <div>
-                  <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Proof / Certificates" />
+                  <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Proof / Certificates" proofMethods={formConfig?.proofMethods || []} />
                 </div>
+
+                {/* Dynamic Custom Fields */}
+                {formConfig?.fields?.map((field, idx) => {
+                  const value = customFields[field.name] || '';
+                  const handleFieldChange = (val) => {
+                    setCustomFields({ ...customFields, [field.name]: val });
+                  };
+
+                  return (
+                    <div key={idx}>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                        {field.label} {field.required && <span className="text-danger">*</span>}
+                      </label>
+                      
+                      {field.type === 'select' ? (
+                        <select
+                          value={value}
+                          required={field.required}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none"
+                        >
+                          <option value="">-- Select option --</option>
+                          {field.options?.map((opt, oIdx) => (
+                            <option key={oIdx} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.type === 'date' ? (
+                        <input
+                          type="date"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : field.type === 'number' ? (
+                        <input
+                          type="number"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          placeholder={`Enter ${field.label.toLowerCase()}`}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
 
                 <div className="pt-4 border-t border-slate-100 flex gap-2">
                   <button

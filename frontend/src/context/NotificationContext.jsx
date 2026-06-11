@@ -61,8 +61,26 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  const clearAllNotifications = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/auth/notifications', {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}` 
+        }
+      });
+      if (res.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error('Failed to clear notifications:', err);
+    }
+  };
+
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, fetchNotifications, markAsRead }}>
+    <NotificationContext.Provider value={{ notifications, unreadCount, fetchNotifications, markAsRead, clearAllNotifications }}>
       {children}
     </NotificationContext.Provider>
   );

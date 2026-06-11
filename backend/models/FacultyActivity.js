@@ -7,7 +7,6 @@ const facultyActivitySchema = new mongoose.Schema({
   department: { type: String, required: true },
   type: { 
     type: String, 
-    enum: ['FDP', 'STTP', 'Workshop', 'Online Course', 'Resource Person'], 
     required: true 
   },
   title: { type: String, required: true },
@@ -24,6 +23,10 @@ const facultyActivitySchema = new mongoose.Schema({
     version: { type: Number, default: 1 },
     uploadedAt: { type: Date, default: Date.now }
   }],
+  customFields: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   verificationStatus: { 
     type: String, 
     enum: ['Pending', 'HOD_Approved', 'IQAC_Approved', 'Rejected'], 

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { AuditLog } from '../models/AuditLog.js';
 import { Department } from '../models/Department.js';
+import { FormConfig } from '../models/FormConfig.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import { logAudit } from '../middleware/auditMiddleware.js';
 
@@ -185,6 +186,57 @@ router.get('/audit-logs', protect, authorize('Admin', 'Principal'), async (req, 
     res.json(list);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching audit logs', error: err.message });
+  }
+});
+
+// =========================================================================
+// DYNAMIC FORM CONFIGURATION SECTION
+// =========================================================================
+
+// @desc    Get form configuration by name
+// @route   GET /api/admin/form-config/:formName
+router.get('/form-config/:formName', protect, async (req, res) => {
+  const { formName } = req.params;
+  try {
+    const config = await FormConfig.findOne({ formName });
+    if (!config) {
+      return res.status(404).json({ message: `Configuration not found for form: ${formName}` });
+    }
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching form configuration', error: err.message });
+  }
+});
+
+// @desc    Create or update form configuration
+// @route   PUT /api/admin/form-config/:formName
+router.put('/form-config/:formName', protect, authorize('Admin', 'Principal'), async (req, res) => {
+  const { formName } = req.params;
+  const { categories, proofMethods, fields } = req.body;
+
+  try {
+    let config = await FormConfig.findOne({ formName });
+    const before = config ? JSON.parse(JSON.stringify(config)) : null;
+
+    if (!config) {
+      config = await FormConfig.create({
+        formName,
+        categories: categories || [],
+        proofMethods: proofMethods || [],
+        fields: fields || []
+      });
+      await logAudit(req, 'CREATE_FORM_CONFIG', `Created form config for ${formName}`, null, config);
+    } else {
+      config.categories = categories || [];
+      config.proofMethods = proofMethods || [];
+      config.fields = fields || [];
+      await config.save();
+      await logAudit(req, 'UPDATE_FORM_CONFIG', `Updated form config for ${formName}`, before, config);
+    }
+
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ message: 'Error saving form configuration', error: err.message });
   }
 });
 

@@ -129,7 +129,7 @@ router.post('/forgot-password', async (req, res) => {
 // @route   GET /api/auth/notifications
 router.get('/notifications', protect, async (req, res) => {
   try {
-    const list = await Notification.find({ recipientId: String(req.user._id) }).sort({ createdAt: -1 });
+    const list = await Notification.find({ recipientId: { $in: [String(req.user._id), req.user._id] } }).sort({ createdAt: -1 });
     res.json(list);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving notifications', error: err.message });
@@ -141,10 +141,38 @@ router.get('/notifications', protect, async (req, res) => {
 router.put('/notifications/:id/read', protect, async (req, res) => {
   const { id } = req.params;
   try {
-    const updated = await Notification.findByIdAndUpdate(id, { readStatus: true }, { new: true });
-    res.json(updated);
+    const notif = await Notification.findById(id);
+    if (!notif) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    // Verify recipient matches logged in user
+    if (String(notif.recipientId) !== String(req.user._id)) {
+      return res.status(403).json({ message: 'Not authorized to read this notification' });
+    }
+    
+    notif.readStatus = true;
+    await notif.save();
+    res.json(notif);
   } catch (err) {
     res.status(500).json({ message: 'Error marking notification read', error: err.message });
+  }
+});
+
+// @desc    Clear / Delete all notifications for user
+// @route   DELETE /api/auth/notifications
+router.delete('/notifications', protect, async (req, res) => {
+  try {
+    if (process.env.USE_MOCK_DB === 'true') {
+      const list = await Notification.find({ recipientId: { $in: [String(req.user._id), req.user._id] } });
+      for (const item of list) {
+        await Notification.findByIdAndDelete(item._id);
+      }
+    } else {
+      await Notification.deleteMany({ recipientId: { $in: [String(req.user._id), req.user._id] } });
+    }
+    res.json({ message: 'Notifications cleared successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error clearing notifications', error: err.message });
   }
 });
 
