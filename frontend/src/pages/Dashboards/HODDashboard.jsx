@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { 
-  Award, BookOpen, FileCheck, CheckCircle2, ShieldAlert, 
+  Award, BookOpen, FileCheck, 
   Clock, Check, X, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
@@ -42,7 +42,9 @@ export const HODDashboard = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const handleApprove = async (id, type) => {
@@ -106,13 +108,12 @@ export const HODDashboard = () => {
     }
   };
 
-  const chartData = analytics ? [
-    { name: 'CSE', Publications: analytics.kpis.publications || 4 },
-    { name: 'ECE', Publications: 3 },
-    { name: 'EEE', Publications: 2 },
-    { name: 'MECH', Publications: 1 },
-    { name: 'CIVIL', Publications: 1 }
-  ] : [];
+  const chartData = analytics?.charts?.publicationsByType 
+    ? analytics.charts.publicationsByType.map(item => ({
+        name: item.name,
+        Publications: item.value
+      }))
+    : [];
 
   return (
     <div className="space-y-6">
@@ -120,7 +121,7 @@ export const HODDashboard = () => {
       {/* Header Profile */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl bg-white p-6 border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">HOD Workspace - CSE</h1>
+          <h1 className="text-xl font-bold text-slate-900">HOD Workspace - {user.department}</h1>
           <p className="text-xs text-slate-500 mt-1 font-medium">
             Sri Eshwar College of Engineering • Department Auditing Workspace
           </p>
@@ -310,10 +311,10 @@ export const HODDashboard = () => {
 
       </div>
 
-      {/* DEPARTMENT AUDIT RANKINGS CHART */}
+      {/* DEPARTMENT PUBLICATIONS BREAKDOWN CHART */}
       <div className="rounded-2xl border border-slate-200 bg-white p-5">
-        <h3 className="font-bold text-slate-900 text-sm">Department Academic Ranking</h3>
-        <p className="text-[10px] text-slate-400 mt-0.5">Accreditation research publications score by department</p>
+        <h3 className="font-bold text-slate-900 text-sm">Research Publications Breakdown</h3>
+        <p className="text-[10px] text-slate-400 mt-0.5">Publications category breakdown for {user.department}</p>
         
         <div className="h-64 mt-4 w-full">
           {chartData.length === 0 ? (

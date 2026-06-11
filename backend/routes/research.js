@@ -119,6 +119,10 @@ router.post('/publications/:id/verify', protect, authorize('HOD', 'IQAC', 'Admin
     const pub = await Publication.findById(req.params.id);
     if (!pub) return res.status(404).json({ message: 'Publication not found' });
 
+    if (req.user.role === 'HOD' && pub.department !== req.user.department) {
+      return res.status(403).json({ message: 'Cannot verify publications outside your department' });
+    }
+
     const before = { ...pub };
     pub.verificationStatus = status;
     pub.verifiedBy = String(req.user._id);
@@ -262,6 +266,10 @@ router.post('/patents/:id/verify', protect, authorize('HOD', 'IQAC', 'Admin'), a
   try {
     const pat = await Patent.findById(req.params.id);
     if (!pat) return res.status(404).json({ message: 'Patent not found' });
+
+    if (req.user.role === 'HOD' && pat.department !== req.user.department) {
+      return res.status(403).json({ message: 'Cannot verify patents outside your department' });
+    }
 
     const before = { ...pat };
     pat.verificationStatus = status;
@@ -407,6 +415,10 @@ router.post('/grants/:id/verify', protect, authorize('HOD', 'IQAC', 'Admin'), as
   try {
     const grant = await GrantAndProject.findById(req.params.id);
     if (!grant) return res.status(404).json({ message: 'Grant not found' });
+
+    if (req.user.role === 'HOD' && grant.department !== req.user.department) {
+      return res.status(403).json({ message: 'Cannot verify grants/projects outside your department' });
+    }
 
     const before = { ...grant };
     grant.verificationStatus = status;

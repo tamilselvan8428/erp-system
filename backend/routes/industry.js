@@ -135,6 +135,10 @@ router.post('/:id/verify', protect, authorize('HOD', 'IQAC', 'Admin'), async (re
     const item = await IndustryInteraction.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Record not found' });
 
+    if (req.user.role === 'HOD' && item.department !== req.user.department) {
+      return res.status(403).json({ message: 'Cannot verify industry records outside your department' });
+    }
+
     const before = { ...item };
     item.verificationStatus = status;
     item.verifiedBy = String(req.user._id);

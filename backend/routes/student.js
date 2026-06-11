@@ -104,6 +104,10 @@ router.post('/:id/verify', protect, authorize('Faculty', 'HOD', 'IQAC', 'Admin')
     const record = await StudentAchievement.findById(req.params.id);
     if (!record) return res.status(404).json({ message: 'Record not found' });
 
+    if ((req.user.role === 'HOD' || req.user.role === 'Faculty') && record.department !== req.user.department) {
+      return res.status(403).json({ message: 'Cannot verify student achievements outside your department' });
+    }
+
     // HOD/Faculty can approve or reject
     const before = { ...record };
     record.verificationStatus = status;

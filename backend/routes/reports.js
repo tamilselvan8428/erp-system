@@ -19,13 +19,19 @@ router.get('/export', protect, authorize('Faculty', 'HOD', 'IQAC', 'Principal', 
   }
 
   try {
+    // Restrict department parameter for Faculty/HOD to their own department
+    let targetDept = department;
+    if (req.user.role === 'HOD' || req.user.role === 'Faculty') {
+      targetDept = req.user.department;
+    }
+
     let headers = [];
     let rows = [];
     let title = 'FSAIS Report';
-    let subtitle = `Academic Year: ${academicYear || 'All'} | Department: ${department || 'All'}`;
+    let subtitle = `Academic Year: ${academicYear || 'All'} | Department: ${targetDept || 'All'}`;
 
     const query = {};
-    if (department) query.department = department;
+    if (targetDept) query.department = targetDept;
 
     // 1. GATHER DATA BASED ON REPORT TYPE
     if (reportType === 'faculty') {
@@ -61,10 +67,10 @@ router.get('/export', protect, authorize('Faculty', 'HOD', 'IQAC', 'Principal', 
       });
 
     } else if (reportType === 'department') {
-      title = `Department Report - ${department || req.user.department}`;
+      title = `Department Report - ${targetDept || req.user.department}`;
       headers = ['Faculty Name', 'Activity Type', 'Title', 'Date Occurred', 'Status'];
 
-      const queryDept = department || req.user.department;
+      const queryDept = targetDept || req.user.department;
       const activities = await FacultyActivity.find({ department: queryDept });
       activities.forEach(a => {
         rows.push([a.facultyName, a.type, a.title, new Date(a.startDate).toLocaleDateString(), a.verificationStatus]);

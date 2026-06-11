@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { NotificationProvider } from './context/NotificationContext.jsx';
@@ -36,8 +36,9 @@ const DashboardRouter = () => {
     case 'HOD':
       return <HODDashboard />;
     case 'IQAC':
-    case 'Admin':
       return <IQACDashboard />;
+    case 'Admin':
+      return <AdminControl />;
     case 'Principal':
       return <PrincipalDashboard />;
     default:

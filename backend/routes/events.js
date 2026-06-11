@@ -109,6 +109,10 @@ router.post('/:id/verify', protect, authorize('HOD', 'IQAC', 'Admin'), async (re
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: 'Event not found' });
 
+    if (req.user.role === 'HOD' && event.department !== req.user.department) {
+      return res.status(403).json({ message: 'Cannot verify events outside your department' });
+    }
+
     const before = { ...event };
     event.verificationStatus = status;
     event.verifiedBy = String(req.user._id);

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { 
   LayoutDashboard, BookOpen, Award, Calendar, 
   Building2, FileText, Shield, Settings, 
-  ChevronLeft, ChevronRight, Menu
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
@@ -16,11 +16,18 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
 
   const getNavItems = () => {
     const role = user.role;
+    
+    if (role === 'Admin') {
+      return [
+        { name: 'User Management', path: '/', icon: Settings }
+      ];
+    }
+
     const items = [
       { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     ];
 
-    if (role !== 'Student') {
+    if (role !== 'Student' && role !== 'Principal') {
       items.push(
         { name: 'Faculty Dev', path: '/faculty-activities', icon: Award },
         { name: 'Research Tracker', path: '/research-tracker', icon: BookOpen },
@@ -29,18 +36,16 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
       );
     }
 
-    items.push({ name: 'Student achievements', path: '/student-achievements', icon: Award });
+    if (role !== 'Principal') {
+      items.push({ name: 'Student achievements', path: '/student-achievements', icon: Award });
+    }
 
-    if (role === 'IQAC' || role === 'HOD' || role === 'Principal' || role === 'Admin') {
+    if (role === 'IQAC' || role === 'HOD') {
       items.push({ name: 'Accreditation & IQAC', path: '/accreditation-iqac', icon: Shield });
     }
 
     if (role !== 'Student') {
       items.push({ name: 'Reports Portal', path: '/reports', icon: FileText });
-    }
-
-    if (role === 'Admin' || role === 'Principal') {
-      items.push({ name: 'Institutional Control', path: '/admin', icon: Settings });
     }
 
     return items;

@@ -16,7 +16,11 @@ const router = express.Router();
 router.get('/analytics', protect, async (req, res) => {
   const { department, academicYear } = req.query;
   const matchQuery = {};
-  if (department) matchQuery.department = department;
+  if (req.user.role === 'HOD') {
+    matchQuery.department = req.user.department;
+  } else if (department) {
+    matchQuery.department = department;
+  }
   if (academicYear) matchQuery.academicYear = academicYear;
 
   try {
@@ -54,7 +58,7 @@ router.get('/analytics', protect, async (req, res) => {
     const pubTypes = ['Journal', 'Conference', 'Book', 'Book Chapter'];
     const publicationsByType = [];
     for (const t of pubTypes) {
-      const count = await Publication.countDocuments({ type: t, verificationStatus: 'IQAC_Approved' });
+      const count = await Publication.countDocuments({ ...matchQuery, type: t, verificationStatus: 'IQAC_Approved' });
       publicationsByType.push({ name: t, value: count });
     }
 
