@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useFormSuccess } from '../context/FormSuccessContext.jsx';
 import { 
   BookOpen, Award, Landmark, PlusCircle, Trash2, 
   Calendar, FileText, CheckCircle, AlertTriangle, RefreshCw
@@ -8,6 +9,7 @@ import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const ResearchTracker = () => {
   const { user, token } = useAuth();
+  const { showSuccess } = useFormSuccess();
   const [activeTab, setActiveTab] = useState('publications'); // 'publications', 'patents', 'grants'
   
   // Data lists
@@ -110,6 +112,7 @@ export const ResearchTracker = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Submit failed');
       
+      showSuccess('Publication logged successfully and routed for approval.', 'Publication Logged!');
       setFormSuccess('Publication logged successfully and routed for approval.');
       setPubTitle('');
       setPubName('');
@@ -151,6 +154,7 @@ export const ResearchTracker = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Submit failed');
       
+      showSuccess('Patent registered successfully and routed for approval.', 'Patent Registered!');
       setFormSuccess('Patent registered successfully and routed for approval.');
       setPatTitle('');
       setPatAppNo('');
@@ -191,6 +195,7 @@ export const ResearchTracker = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Submit failed');
       
+      showSuccess('Grant/Consultancy project logged successfully.', 'Project Logged!');
       setFormSuccess('Grant/Consultancy project logged successfully.');
       setGrantTitle('');
       setGrantAgency('');

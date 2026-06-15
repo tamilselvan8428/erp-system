@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useFormSuccess } from '../context/FormSuccessContext.jsx';
 import { 
   Award, PlusCircle, Trash2, Calendar, 
   RefreshCw, FileText, CheckCircle, AlertTriangle
@@ -8,6 +9,7 @@ import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const StudentAchievements = () => {
   const { user, token } = useAuth();
+  const { showSuccess } = useFormSuccess();
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -65,6 +67,7 @@ export const StudentAchievements = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to submit entry');
 
+      showSuccess('Achievement logged successfully! Sent to department for verification.', 'Achievement Logged!');
       setFormSuccess('Achievement logged successfully! Sent to department for verification.');
       setTitle('');
       setOrg('');

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useFormSuccess } from '../context/FormSuccessContext.jsx';
 import { 
   Building2, PlusCircle, Trash2, Mail, 
   Calendar, RefreshCw, FileText, CheckCircle, AlertTriangle
@@ -8,6 +9,7 @@ import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const IndustryInteraction = () => {
   const { user, token } = useAuth();
+  const { showSuccess } = useFormSuccess();
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -69,6 +71,7 @@ export const IndustryInteraction = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to submit entry');
 
+      showSuccess('Industry interaction logged successfully and routed for approval.', 'Collaboration Logged!');
       setFormSuccess('Industry interaction logged successfully and routed for approval.');
       setOrgName('');
       setContactPerson('');

@@ -23,6 +23,8 @@ import AccreditationIqac from './pages/AccreditationIqac.jsx';
 import ReportsPortal from './pages/ReportsPortal.jsx';
 import AdminControl from './pages/AdminControl.jsx';
 
+import { FormSuccessProvider } from './context/FormSuccessContext.jsx';
+
 // Component to handle redirection to correct dashboard based on role
 const DashboardRouter = () => {
   const { user } = useAuth();
@@ -85,17 +87,19 @@ function App() {
     <Router>
       <AuthProvider>
         <NotificationProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route 
-              path="/*" 
-              element={
-                <ProtectedRoute>
-                  <MainLayout />
-                </ProtectedRoute>
-              } 
-            />
-          </Routes>
+          <FormSuccessProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route 
+                path="/*" 
+                element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </FormSuccessProvider>
         </NotificationProvider>
       </AuthProvider>
     </Router>

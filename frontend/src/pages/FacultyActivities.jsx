@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useFormSuccess } from '../context/FormSuccessContext.jsx';
 import { 
   Award, Calendar, Clock, PlusCircle, Trash2, 
   AlertTriangle, CheckCircle, Info, RefreshCw, FileText,
@@ -10,6 +11,7 @@ import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const FacultyActivities = () => {
   const { user, token } = useAuth();
+  const { showSuccess } = useFormSuccess();
   
   // All loaded datasets
   const [allItems, setAllItems] = useState([]);
@@ -343,6 +345,7 @@ export const FacultyActivities = () => {
         throw new Error(data.message || 'Failed to log activity');
       }
 
+      showSuccess('Activity logged successfully and sent to HOD for review!', 'Activity Logged!');
       setFormSuccess('Activity logged successfully and sent to HOD for review!');
       setTitle('');
       setOrganizer('');

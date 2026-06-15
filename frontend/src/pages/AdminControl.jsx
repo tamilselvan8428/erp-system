@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useFormSuccess } from '../context/FormSuccessContext.jsx';
 import { 
   Settings, PlusCircle, Trash2, Edit, RefreshCw, Info, Check, Save, ToggleLeft, ArrowRight
 } from 'lucide-react';
 
 export const AdminControl = () => {
   const { token } = useAuth();
+  const { showSuccess } = useFormSuccess();
   const [activeTab, setActiveTab] = useState('users'); // 'users' or 'forms'
   
   const [usersList, setUsersList] = useState([]);
@@ -115,6 +117,7 @@ export const AdminControl = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Operation failed');
 
+      showSuccess(isEditing ? `User account ${email} updated successfully!` : `User account ${email} created successfully!`, isEditing ? 'Account Updated!' : 'Account Created!');
       setFormSuccess(isEditing ? `User account ${email} updated successfully!` : `User account ${email} created successfully!`);
       clearUserForm();
       loadData();
@@ -326,6 +329,7 @@ export const AdminControl = () => {
 
 // Form Customizer Panel component
 const FormConfiguratorConsole = ({ token }) => {
+  const { showSuccess } = useFormSuccess();
   const [formName, setFormName] = useState('FacultyActivity');
   const [categories, setCategories] = useState([]);
   const [proofMethods, setProofMethods] = useState([]);
@@ -388,6 +392,7 @@ const FormConfiguratorConsole = ({ token }) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to save form config');
+      showSuccess('Form configuration successfully saved and synchronized!', 'Config Synchronized!');
       setSuccess('Form configuration successfully saved and synchronized!');
     } catch (err) {
       setError(err.message);

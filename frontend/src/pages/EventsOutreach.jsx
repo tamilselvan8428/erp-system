@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useFormSuccess } from '../context/FormSuccessContext.jsx';
 import { 
   Calendar, MapPin, Users, PlusCircle, Trash2, 
   RefreshCw, FileText, CheckCircle, AlertTriangle
@@ -8,6 +9,7 @@ import { EvidenceViewer } from '../components/EvidenceViewer.jsx';
 
 export const EventsOutreach = () => {
   const { user, token } = useAuth();
+  const { showSuccess } = useFormSuccess();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   
@@ -77,6 +79,7 @@ export const EventsOutreach = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to log event');
 
+      showSuccess('Event logged successfully. HOD review pending.', 'Event Logged!');
       setFormSuccess('Event logged successfully. HOD review pending.');
       setTitle('');
       setDescription('');
