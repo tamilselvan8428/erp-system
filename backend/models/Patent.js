@@ -30,6 +30,10 @@ const patentSchema = new mongoose.Schema({
   },
   verifiedBy: { type: String },
   rejectionReason: { type: String },
+  customFields: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   accreditationMapping: {
     naac: [String],
     nba: [String],

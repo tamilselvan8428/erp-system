@@ -97,17 +97,22 @@ app.get('/api/health', (req, res) => res.json({ status: 'OK', database: process.
 // Seed function
 const seedDemoData = async () => {
   try {
-    // Seed default FormConfig
-    const formConfigCount = await FormConfig.countDocuments({ formName: 'FacultyActivity' });
-    if (formConfigCount === 0) {
-      console.log('🌱 Seeding default FacultyActivity form configuration...');
-      await FormConfig.create({
-        formName: 'FacultyActivity',
-        categories: ['FDP', 'STTP', 'Workshop', 'Online Course', 'Resource Person'],
-        proofMethods: ['Certificate', 'Brochure', 'Attendance', 'Report'],
-        fields: []
-      });
-    }
+    // Seed default FormConfigs
+    const seedConfig = async (formName, categories, proofMethods) => {
+      const count = await FormConfig.countDocuments({ formName });
+      if (count === 0) {
+        console.log(`🌱 Seeding default ${formName} form configuration...`);
+        await FormConfig.create({ formName, categories, proofMethods, fields: [] });
+      }
+    };
+
+    await seedConfig('FacultyActivity', ['FDP', 'STTP', 'Workshop', 'Online Course', 'Resource Person', 'Seminar'], ['Certificate', 'Brochure', 'Attendance', 'Report', 'Letter of Appreciation']);
+    await seedConfig('StudentAchievement', ['Internship', 'Placement Offer', 'Co-curricular Prize', 'Certification', 'Hackathon', 'Award'], ['Offer Letter', 'Certificate', 'Report', 'Photo']);
+    await seedConfig('Publication', ['Journal', 'Conference', 'Book', 'Book Chapter'], ['Full Paper', 'Acceptance Letter', 'Certificate', 'Index Proof']);
+    await seedConfig('Patent', ['Filed', 'Published', 'Granted'], ['Filing Receipt', 'Patent Document', 'Granted Certificate']);
+    await seedConfig('GrantAndProject', ['Research Grant', 'Consultancy', 'Seed Money'], ['Sanction Letter', 'Utilization Certificate', 'Project Report']);
+    await seedConfig('IndustryInteraction', ['MoU', 'Industry Visit', 'Expert Talk', 'Consultancy Interaction'], ['MoU Document', 'Certificate', 'Letter of Appreciation', 'Photo']);
+    await seedConfig('Event', ['Guest Lecture', 'Workshop', 'Symposium', 'Conference', 'Hackathon', 'Project Expo', 'Special Day'], ['Brochure', 'Circular', 'Attendance', 'Report', 'Budget Sheets']);
 
     const deptCount = await Department.countDocuments();
     if (deptCount === 0) {

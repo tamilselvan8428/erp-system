@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
   academicYear: { type: String, required: true },
   active: { type: Boolean, default: true },
   apiScore: { type: Number, default: 0 },
+  profilePhoto: { type: String },
   monthlyClosureStatus: [{
     month: { type: Number, required: true },
     year: { type: Number, required: true },

@@ -83,7 +83,8 @@ router.post('/publications', protect, authorize('Faculty', 'HOD', 'Admin'), asyn
       coAuthors: coAuthors || [],
       attachments: attachments || [],
       accreditationMapping: mapping,
-      verificationStatus: 'Pending'
+      verificationStatus: 'Pending',
+      customFields: req.body.customFields || {}
     });
 
     await sendWorkflowNotifications(authorUser, type, title, '/research-tracker');
@@ -231,7 +232,8 @@ router.post('/patents', protect, authorize('Faculty', 'HOD', 'Admin'), async (re
       coInventors: coInventors || [],
       attachments: attachments || [],
       accreditationMapping: mapping,
-      verificationStatus: 'Pending'
+      verificationStatus: 'Pending',
+      customFields: req.body.customFields || {}
     });
 
     await sendWorkflowNotifications(inventorUser, 'Patent', title, '/research-tracker');
@@ -380,7 +382,8 @@ router.post('/grants', protect, authorize('Faculty', 'HOD', 'Admin'), async (req
       projectOutcome,
       attachments: attachments || [],
       accreditationMapping: mapping,
-      verificationStatus: 'Pending'
+      verificationStatus: 'Pending',
+      customFields: req.body.customFields || {}
     });
 
     await sendWorkflowNotifications(investigatorUser, type, title, '/research-tracker');

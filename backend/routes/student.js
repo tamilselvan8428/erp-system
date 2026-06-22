@@ -53,7 +53,8 @@ router.post('/', protect, authorize('Student', 'Faculty', 'Admin'), async (req, 
       dateOccurred,
       attachments: attachments || [],
       accreditationMapping: mapping,
-      verificationStatus: 'Pending'
+      verificationStatus: 'Pending',
+      customFields: req.body.customFields || {}
     });
 
     // Notify HOD and Faculty advisors in same department

@@ -62,7 +62,8 @@ router.post('/', protect, authorize('Faculty', 'HOD', 'Admin'), async (req, res)
       attachments: attachments || [],
       photos: photos || [],
       accreditationMapping: mapping,
-      verificationStatus: 'Pending'
+      verificationStatus: 'Pending',
+      customFields: req.body.customFields || {}
     });
 
     const hods = await User.find({ role: 'HOD', department: user.department });

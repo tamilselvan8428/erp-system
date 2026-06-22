@@ -53,7 +53,8 @@ router.post('/login', async (req, res) => {
         facultyId: user.facultyId,
         academicYear: user.academicYear,
         apiScore: user.apiScore,
-        monthlyClosureStatus: user.monthlyClosureStatus
+        monthlyClosureStatus: user.monthlyClosureStatus,
+        profilePhoto: user.profilePhoto
       }
     });
   } catch (err) {
@@ -75,8 +76,60 @@ router.get('/me', protect, async (req, res) => {
     facultyId: req.user.facultyId,
     academicYear: req.user.academicYear,
     apiScore: req.user.apiScore,
-    monthlyClosureStatus: req.user.monthlyClosureStatus
+    monthlyClosureStatus: req.user.monthlyClosureStatus,
+    profilePhoto: req.user.profilePhoto
   });
+});
+
+// @desc    Update User Profile
+// @route   PUT /api/auth/profile
+router.put('/profile', protect, async (req, res) => {
+  const { name, email, password, profilePhoto } = req.body;
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (email) {
+      const existing = await User.findOne({ email });
+      if (existing && String(existing._id) !== String(user._id)) {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+      user.email = email;
+    }
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+    if (profilePhoto !== undefined) {
+      user.profilePhoto = profilePhoto;
+    }
+
+    await user.save();
+    await logAudit(req, 'UPDATE_PROFILE', `User ${user.email} updated profile details`);
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        designation: user.designation,
+        studentId: user.studentId,
+        facultyId: user.facultyId,
+        academicYear: user.academicYear,
+        apiScore: user.apiScore,
+        monthlyClosureStatus: user.monthlyClosureStatus,
+        profilePhoto: user.profilePhoto
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating profile', error: err.message });
+  }
 });
 
 // @desc    Change Password
