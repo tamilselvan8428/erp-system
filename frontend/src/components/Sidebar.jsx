@@ -77,9 +77,11 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-primary/20 px-4">
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary-dark font-bold text-lg">
-              SE
-            </div>
+            <img 
+              src="/OIP.jpeg" 
+              alt="Logo" 
+              className="h-10 w-10 shrink-0 rounded-lg object-cover" 
+            />
             {!isCollapsed && (
               <div className="flex flex-col">
                 <span className="font-bold text-sm leading-tight tracking-wider">FSAIS PORTAL</span>

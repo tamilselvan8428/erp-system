@@ -26,6 +26,9 @@ export const IndustryInteraction = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
+  const [formConfig, setFormConfig] = useState(null);
+  const [customFields, setCustomFields] = useState({});
+
   const loadLinks = async () => {
     try {
       const res = await fetch('/api/industry', {
@@ -39,8 +42,26 @@ export const IndustryInteraction = () => {
     }
   };
 
+  const loadFormConfig = async () => {
+    try {
+      const res = await fetch('/api/admin/form-config/IndustryInteraction', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFormConfig(data);
+        if (data.categories && data.categories.length > 0) {
+          setType(data.categories[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load form config:', err);
+    }
+  };
+
   useEffect(() => {
     loadLinks();
+    loadFormConfig();
   }, [token]);
 
   const handleSubmit = async (e) => {
@@ -64,7 +85,8 @@ export const IndustryInteraction = () => {
           dateOccurred,
           validityEndDate: type === 'MoU' ? validityEndDate : undefined,
           description,
-          attachments: attachments
+          attachments: attachments,
+          customFields
         })
       });
 
@@ -80,6 +102,7 @@ export const IndustryInteraction = () => {
       setValidityEndDate('');
       setDescription('');
       setAttachments([]);
+      setCustomFields({});
       loadLinks();
     } catch (err) {
       setFormError(err.message);
@@ -142,10 +165,16 @@ export const IndustryInteraction = () => {
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Link Type</label>
                 <select value={type} onChange={(e) => setType(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none">
-                  <option value="MoU">MoU (Agreement)</option>
-                  <option value="Industrial Visit">Industrial Visit</option>
-                  <option value="Guest Lecture">Industry Guest Lecture</option>
-                  <option value="Placement Partner">Placement Collaboration</option>
+                  {formConfig?.categories?.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  )) || (
+                    <>
+                      <option value="MoU">MoU (Agreement)</option>
+                      <option value="Industry Visit">Industrial Visit</option>
+                      <option value="Expert Talk">Industry Guest Lecture</option>
+                      <option value="Consultancy Interaction">Placement Collaboration</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -182,7 +211,62 @@ export const IndustryInteraction = () => {
                 <textarea placeholder="e.g. Internships and research collaboration terms" value={description} onChange={(e) => setDescription(e.target.value)} className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none" rows="2" />
               </div>
 
-              <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Collaboration Proofs" />
+              <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Collaboration Proofs" proofMethods={formConfig?.proofMethods || []} />
+
+              {/* Dynamic Custom Fields */}
+              {formConfig?.fields?.map((field, idx) => {
+                const value = customFields[field.name] || '';
+                const handleFieldChange = (val) => {
+                  setCustomFields({ ...customFields, [field.name]: val });
+                };
+
+                return (
+                  <div key={idx}>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                      {field.label} {field.required && <span className="text-danger">*</span>}
+                    </label>
+                    
+                    {field.type === 'select' ? (
+                      <select
+                        value={value}
+                        required={field.required}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none"
+                      >
+                        <option value="">-- Select option --</option>
+                        {field.options?.map((opt, oIdx) => (
+                          <option key={oIdx} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : field.type === 'date' ? (
+                      <input
+                        type="date"
+                        required={field.required}
+                        value={value}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                      />
+                    ) : field.type === 'number' ? (
+                      <input
+                        type="number"
+                        required={field.required}
+                        value={value}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        required={field.required}
+                        value={value}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                        className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                      />
+                    )}
+                  </div>
+                );
+              })}
 
               <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Log Industry Link</button>
             </form>
@@ -212,6 +296,22 @@ export const IndustryInteraction = () => {
                           <span className="font-bold">Expires: {new Date(link.validityEndDate).toLocaleDateString()}</span>
                         )}
                       </div>
+                      
+                      {link.customFields && Object.keys(link.customFields).length > 0 && (
+                        <div className="mt-2 bg-slate-100/80 p-2 rounded-lg text-[10px] space-y-0.5 max-w-lg border border-slate-200/50">
+                          {Object.keys(link.customFields).map(key => {
+                            const fConfig = formConfig?.fields?.find(f => f.name === key);
+                            const label = fConfig ? fConfig.label : key;
+                            return (
+                              <div key={key} className="flex gap-1.5">
+                                <span className="font-bold text-slate-500">{label}:</span>
+                                <span className="text-slate-800 font-medium">{link.customFields[key]}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       {link.attachments && link.attachments.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
                           {link.attachments.map((att, idx) => (

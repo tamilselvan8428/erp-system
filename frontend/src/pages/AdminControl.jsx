@@ -481,6 +481,12 @@ const FormConfiguratorConsole = ({ token }) => {
             className="block w-full rounded-lg border border-slate-300 bg-white p-2.5 text-xs focus:border-primary focus:outline-none"
           >
             <option value="FacultyActivity">Faculty Activities Form</option>
+            <option value="StudentAchievement">Student Placement & Achievements Form</option>
+            <option value="Publication">Research Publications Form</option>
+            <option value="Patent">Patents Form</option>
+            <option value="GrantAndProject">Grants & Projects Form</option>
+            <option value="IndustryInteraction">Industry Interactions Form</option>
+            <option value="Event">Events & Outreach Form</option>
           </select>
         </div>
       </div>

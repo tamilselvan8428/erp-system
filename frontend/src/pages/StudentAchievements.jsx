@@ -24,6 +24,9 @@ export const StudentAchievements = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
+  const [formConfig, setFormConfig] = useState(null);
+  const [customFields, setCustomFields] = useState({});
+
   const loadAchievements = async () => {
     try {
       const res = await fetch('/api/student', {
@@ -37,8 +40,26 @@ export const StudentAchievements = () => {
     }
   };
 
+  const loadFormConfig = async () => {
+    try {
+      const res = await fetch('/api/admin/form-config/StudentAchievement', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFormConfig(data);
+        if (data.categories && data.categories.length > 0) {
+          setType(data.categories[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load form config:', err);
+    }
+  };
+
   useEffect(() => {
     loadAchievements();
+    loadFormConfig();
   }, [token]);
 
   const handleSubmit = async (e) => {
@@ -60,7 +81,8 @@ export const StudentAchievements = () => {
           organization: org,
           details,
           dateOccurred,
-          attachments: attachments
+          attachments: attachments,
+          customFields
         })
       });
 
@@ -74,6 +96,7 @@ export const StudentAchievements = () => {
       setDetails('');
       setDateOccurred('');
       setAttachments([]);
+      setCustomFields({});
       loadAchievements();
     } catch (err) {
       setFormError(err.message);
@@ -136,10 +159,16 @@ export const StudentAchievements = () => {
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Achievement Category</label>
                 <select value={type} onChange={(e) => setType(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none">
-                  <option value="Internship">Internship Offer</option>
-                  <option value="Placement Offer">Placement Career Offer</option>
-                  <option value="Co-curricular Prize">Co-curricular Contest Win</option>
-                  <option value="Certification">External Certification</option>
+                  {formConfig?.categories?.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  )) || (
+                    <>
+                      <option value="Internship">Internship Offer</option>
+                      <option value="Placement Offer">Placement Career Offer</option>
+                      <option value="Co-curricular Prize">Co-curricular Contest Win</option>
+                      <option value="Certification">External Certification</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -163,7 +192,62 @@ export const StudentAchievements = () => {
                 <input type="text" placeholder="e.g. Stipend: Rs. 20,000/month or Cash Prize: Rs. 50,000" value={details} onChange={(e) => setDetails(e.target.value)} className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none" />
               </div>
 
-              <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Placement Offer / Certificate / Photos" />
+              <EvidenceViewer attachments={attachments} onChange={setAttachments} label="Upload Placement Offer / Certificate / Photos" proofMethods={formConfig?.proofMethods || []} />
+
+              {/* Dynamic Custom Fields */}
+              {formConfig?.fields?.map((field, idx) => {
+                const value = customFields[field.name] || '';
+                const handleFieldChange = (val) => {
+                  setCustomFields({ ...customFields, [field.name]: val });
+                };
+
+                return (
+                  <div key={idx}>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                      {field.label} {field.required && <span className="text-danger">*</span>}
+                    </label>
+                    
+                    {field.type === 'select' ? (
+                      <select
+                        value={value}
+                        required={field.required}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none"
+                      >
+                        <option value="">-- Select option --</option>
+                        {field.options?.map((opt, oIdx) => (
+                          <option key={oIdx} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : field.type === 'date' ? (
+                      <input
+                        type="date"
+                        required={field.required}
+                        value={value}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                      />
+                    ) : field.type === 'number' ? (
+                      <input
+                        type="number"
+                        required={field.required}
+                        value={value}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        required={field.required}
+                        value={value}
+                        onChange={(e) => handleFieldChange(e.target.value)}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                        className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                      />
+                    )}
+                  </div>
+                );
+              })}
 
               <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Submit Achievement</button>
             </form>
@@ -191,6 +275,20 @@ export const StudentAchievements = () => {
                         <span>•</span>
                         <span className="flex items-center gap-1"><Calendar size={10} /> Date: {new Date(ach.dateOccurred).toLocaleDateString()}</span>
                       </div>
+                      {ach.customFields && Object.keys(ach.customFields).length > 0 && (
+                        <div className="mt-2 bg-slate-100/80 p-2 rounded-lg text-[10px] space-y-1 max-w-lg border border-slate-200/50">
+                          {Object.keys(ach.customFields).map(key => {
+                            const fConfig = formConfig?.fields?.find(f => f.name === key);
+                            const label = fConfig ? fConfig.label : key;
+                            return (
+                              <div key={key} className="flex gap-1.5">
+                                <span className="font-bold text-slate-500">{label}:</span>
+                                <span className="text-slate-800 font-medium">{ach.customFields[key]}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                       {ach.attachments && ach.attachments.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1.5 mt-2 border-t border-slate-100 pt-2">
                           {ach.attachments.map((att, idx) => (

@@ -166,8 +166,12 @@ export const Navbar = ({ onMobileToggle }) => {
             }}
             className="flex items-center gap-2 rounded-full p-1.5 hover:bg-slate-100 transition"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white font-semibold text-sm">
-              {user.name.charAt(0)}
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white font-semibold text-sm overflow-hidden border border-slate-200 shadow-sm">
+              {user.profilePhoto ? (
+                <img src={user.profilePhoto} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                user.name.charAt(0)
+              )}
             </div>
           </button>
 
@@ -180,12 +184,12 @@ export const Navbar = ({ onMobileToggle }) => {
               </div>
               <div className="py-1">
                 <Link 
-                  to="/reports" 
+                  to="/profile" 
                   onClick={() => setIsProfileOpen(false)}
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 transition"
                 >
                   <User size={14} />
-                  My Reports
+                  Profile
                 </Link>
               </div>
               <div className="border-t border-slate-100 pt-1">

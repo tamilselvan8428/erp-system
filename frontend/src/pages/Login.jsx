@@ -58,9 +58,11 @@ export const Login = () => {
         
         {/* Title Brand Header */}
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg text-accent text-3xl font-black">
-            SE
-          </div>
+          <img 
+            src="/OIP.jpeg" 
+            alt="Logo" 
+            className="mx-auto h-16 w-16 rounded-2xl object-cover shadow-lg" 
+          />
           <h2 className="mt-6 text-2xl font-bold tracking-tight text-primary-dark">
             FSAIS Academic Intelligence
           </h2>

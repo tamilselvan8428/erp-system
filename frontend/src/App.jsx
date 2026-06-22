@@ -22,6 +22,7 @@ import StudentAchievements from './pages/StudentAchievements.jsx';
 import AccreditationIqac from './pages/AccreditationIqac.jsx';
 import ReportsPortal from './pages/ReportsPortal.jsx';
 import AdminControl from './pages/AdminControl.jsx';
+import Profile from './pages/Profile.jsx';
 
 import { FormSuccessProvider } from './context/FormSuccessContext.jsx';
 
@@ -75,6 +76,7 @@ const MainLayout = () => {
             <Route path="/accreditation-iqac" element={<AccreditationIqac />} />
             <Route path="/reports" element={<ReportsPortal />} />
             <Route path="/admin" element={<AdminControl />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
       </div>

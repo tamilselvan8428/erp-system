@@ -54,6 +54,14 @@ export const ResearchTracker = () => {
   const [patAttachments, setPatAttachments] = useState([]);
   const [grantAttachments, setGrantAttachments] = useState([]);
 
+  const [pubConfig, setPubConfig] = useState(null);
+  const [patConfig, setPatConfig] = useState(null);
+  const [grantConfig, setGrantConfig] = useState(null);
+
+  const [pubCustomFields, setPubCustomFields] = useState({});
+  const [patCustomFields, setPatCustomFields] = useState({});
+  const [grantCustomFields, setGrantCustomFields] = useState({});
+
   const loadData = async () => {
     try {
       if (activeTab === 'publications') {
@@ -76,6 +84,40 @@ export const ResearchTracker = () => {
       console.error('Failed to load research data:', e);
     }
   };
+
+  const loadConfigs = async () => {
+    try {
+      const headers = { 'Authorization': `Bearer ${token}` };
+      const [resPub, resPat, resGra] = await Promise.all([
+        fetch('/api/admin/form-config/Publication', { headers }),
+        fetch('/api/admin/form-config/Patent', { headers }),
+        fetch('/api/admin/form-config/GrantAndProject', { headers })
+      ]);
+      if (resPub.ok) {
+        const data = await resPub.json();
+        setPubConfig(data);
+        if (data.categories && data.categories.length > 0) setPubType(data.categories[0]);
+      }
+      if (resPat.ok) {
+        const data = await resPat.json();
+        setPatConfig(data);
+        if (data.categories && data.categories.length > 0) setPatStatus(data.categories[0]);
+      }
+      if (resGra.ok) {
+        const data = await resGra.json();
+        setGrantConfig(data);
+        if (data.categories && data.categories.length > 0) setGrantType(data.categories[0]);
+      }
+    } catch (err) {
+      console.error('Failed to load configurations:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      loadConfigs();
+    }
+  }, [token]);
 
   useEffect(() => {
     loadData();
@@ -106,7 +148,8 @@ export const ResearchTracker = () => {
           doi: pubDoi,
           impactFactor: pubImpact ? Number(pubImpact) : undefined,
           indexing: indexingArr,
-          attachments: pubAttachments
+          attachments: pubAttachments,
+          customFields: pubCustomFields
         })
       });
       const data = await res.json();
@@ -122,6 +165,7 @@ export const ResearchTracker = () => {
       setPubDoi('');
       setPubImpact('');
       setPubAttachments([]);
+      setPubCustomFields({});
       loadData();
     } catch (err) {
       setFormError(err.message);
@@ -148,7 +192,8 @@ export const ResearchTracker = () => {
           filingDate: patFilingDate,
           status: patStatus,
           country: patCountry,
-          attachments: patAttachments
+          attachments: patAttachments,
+          customFields: patCustomFields
         })
       });
       const data = await res.json();
@@ -160,6 +205,7 @@ export const ResearchTracker = () => {
       setPatAppNo('');
       setPatFilingDate('');
       setPatAttachments([]);
+      setPatCustomFields({});
       loadData();
     } catch (err) {
       setFormError(err.message);
@@ -189,7 +235,8 @@ export const ResearchTracker = () => {
           startDate: grantStart,
           endDate: grantEnd,
           status: grantStatus,
-          attachments: grantAttachments
+          attachments: grantAttachments,
+          customFields: grantCustomFields
         })
       });
       const data = await res.json();
@@ -204,6 +251,7 @@ export const ResearchTracker = () => {
       setGrantStart('');
       setGrantEnd('');
       setGrantAttachments([]);
+      setGrantCustomFields({});
       loadData();
     } catch (err) {
       setFormError(err.message);
@@ -290,10 +338,16 @@ export const ResearchTracker = () => {
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Publication Type</label>
                   <select value={pubType} onChange={(e) => setPubType(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none">
-                    <option value="Journal">Journal</option>
-                    <option value="Conference">Conference</option>
-                    <option value="Book">Book</option>
-                    <option value="Book Chapter">Book Chapter</option>
+                    {pubConfig?.categories?.map((cat, idx) => (
+                      <option key={idx} value={cat}>{cat}</option>
+                    )) || (
+                      <>
+                        <option value="Journal">Journal</option>
+                        <option value="Conference">Conference</option>
+                        <option value="Book">Book</option>
+                        <option value="Book Chapter">Book Chapter</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div>
@@ -332,7 +386,62 @@ export const ResearchTracker = () => {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Indexing (Comma separated)</label>
                   <input type="text" placeholder="Scopus, Web of Science" value={pubIndexing} onChange={(e) => setPubIndexing(e.target.value)} className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none" />
                 </div>
-                <EvidenceViewer attachments={pubAttachments} onChange={setPubAttachments} label="Upload Publication Evidence" />
+                <EvidenceViewer attachments={pubAttachments} onChange={setPubAttachments} label="Upload Publication Evidence" proofMethods={pubConfig?.proofMethods || []} />
+                
+                {/* Dynamic Custom Fields */}
+                {pubConfig?.fields?.map((field, idx) => {
+                  const value = pubCustomFields[field.name] || '';
+                  const handleFieldChange = (val) => {
+                    setPubCustomFields({ ...pubCustomFields, [field.name]: val });
+                  };
+
+                  return (
+                    <div key={idx}>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                        {field.label} {field.required && <span className="text-danger">*</span>}
+                      </label>
+                      {field.type === 'select' ? (
+                        <select
+                          value={value}
+                          required={field.required}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none"
+                        >
+                          <option value="">-- Select option --</option>
+                          {field.options?.map((opt, oIdx) => (
+                            <option key={oIdx} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.type === 'date' ? (
+                        <input
+                          type="date"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : field.type === 'number' ? (
+                        <input
+                          type="number"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          placeholder={`Enter ${field.label.toLowerCase()}`}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+
                 <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Submit Publication</button>
               </form>
             )}
@@ -360,12 +469,73 @@ export const ResearchTracker = () => {
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Patent Status</label>
                   <select value={patStatus} onChange={(e) => setPatStatus(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none">
-                    <option value="Filed">Filed</option>
-                    <option value="Published">Published</option>
-                    <option value="Granted">Granted</option>
+                    {patConfig?.categories?.map((cat, idx) => (
+                      <option key={idx} value={cat}>{cat}</option>
+                    )) || (
+                      <>
+                        <option value="Filed">Filed</option>
+                        <option value="Published">Published</option>
+                        <option value="Granted">Granted</option>
+                      </>
+                    )}
                   </select>
                 </div>
-                <EvidenceViewer attachments={patAttachments} onChange={setPatAttachments} label="Upload Patent Evidence/Doc" />
+                <EvidenceViewer attachments={patAttachments} onChange={setPatAttachments} label="Upload Patent Evidence/Doc" proofMethods={patConfig?.proofMethods || []} />
+
+                {/* Dynamic Custom Fields */}
+                {patConfig?.fields?.map((field, idx) => {
+                  const value = patCustomFields[field.name] || '';
+                  const handleFieldChange = (val) => {
+                    setPatCustomFields({ ...patCustomFields, [field.name]: val });
+                  };
+
+                  return (
+                    <div key={idx}>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                        {field.label} {field.required && <span className="text-danger">*</span>}
+                      </label>
+                      {field.type === 'select' ? (
+                        <select
+                          value={value}
+                          required={field.required}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none"
+                        >
+                          <option value="">-- Select option --</option>
+                          {field.options?.map((opt, oIdx) => (
+                            <option key={oIdx} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.type === 'date' ? (
+                        <input
+                          type="date"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : field.type === 'number' ? (
+                        <input
+                          type="number"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          placeholder={`Enter ${field.label.toLowerCase()}`}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+
                 <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Register Patent</button>
               </form>
             )}
@@ -375,9 +545,15 @@ export const ResearchTracker = () => {
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Project Type</label>
                   <select value={grantType} onChange={(e) => setGrantType(e.target.value)} className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none">
-                    <option value="Research Grant">Research Grant</option>
-                    <option value="Consultancy">Consultancy Revenue</option>
-                    <option value="Seed Money">Seed Money</option>
+                    {grantConfig?.categories?.map((cat, idx) => (
+                      <option key={idx} value={cat}>{cat}</option>
+                    )) || (
+                      <>
+                        <option value="Research Grant">Research Grant</option>
+                        <option value="Consultancy">Consultancy Revenue</option>
+                        <option value="Seed Money">Seed Money</option>
+                      </>
+                    )}
                   </select>
                 </div>
                 <div>
@@ -415,7 +591,62 @@ export const ResearchTracker = () => {
                     <option value="Completed">Completed</option>
                   </select>
                 </div>
-                <EvidenceViewer attachments={grantAttachments} onChange={setGrantAttachments} label="Upload Grant/Project Proofs" />
+                <EvidenceViewer attachments={grantAttachments} onChange={setGrantAttachments} label="Upload Grant/Project Proofs" proofMethods={grantConfig?.proofMethods || []} />
+
+                {/* Dynamic Custom Fields */}
+                {grantConfig?.fields?.map((field, idx) => {
+                  const value = grantCustomFields[field.name] || '';
+                  const handleFieldChange = (val) => {
+                    setGrantCustomFields({ ...grantCustomFields, [field.name]: val });
+                  };
+
+                  return (
+                    <div key={idx}>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+                        {field.label} {field.required && <span className="text-danger">*</span>}
+                      </label>
+                      {field.type === 'select' ? (
+                        <select
+                          value={value}
+                          required={field.required}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 bg-white p-2 text-xs focus:border-primary focus:outline-none"
+                        >
+                          <option value="">-- Select option --</option>
+                          {field.options?.map((opt, oIdx) => (
+                            <option key={oIdx} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : field.type === 'date' ? (
+                        <input
+                          type="date"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : field.type === 'number' ? (
+                        <input
+                          type="number"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => handleFieldChange(e.target.value)}
+                          placeholder={`Enter ${field.label.toLowerCase()}`}
+                          className="block w-full rounded-lg border border-slate-300 p-2 text-xs focus:border-primary focus:outline-none"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+
                 <button type="submit" disabled={loading} className="w-full rounded-lg bg-primary py-2 text-xs font-semibold text-white shadow hover:bg-primary-dark transition">Log Grant Project</button>
               </form>
             )}
@@ -461,6 +692,20 @@ export const ResearchTracker = () => {
                                 <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
                               </a>
                             ))}
+                          </div>
+                        )}
+                        {p.customFields && Object.keys(p.customFields).length > 0 && (
+                          <div className="mt-2 bg-slate-100/80 p-2 rounded-lg text-[10px] space-y-0.5 max-w-lg border border-slate-200/50">
+                            {Object.keys(p.customFields).map(key => {
+                              const fConfig = pubConfig?.fields?.find(f => f.name === key);
+                              const label = fConfig ? fConfig.label : key;
+                              return (
+                                <div key={key} className="flex gap-1.5">
+                                  <span className="font-bold text-slate-500">{label}:</span>
+                                  <span className="text-slate-800 font-medium">{p.customFields[key]}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                         {p.rejectionReason && p.verificationStatus === 'Rejected' && (
@@ -518,6 +763,20 @@ export const ResearchTracker = () => {
                             ))}
                           </div>
                         )}
+                        {p.customFields && Object.keys(p.customFields).length > 0 && (
+                          <div className="mt-2 bg-slate-100/80 p-2 rounded-lg text-[10px] space-y-0.5 max-w-lg border border-slate-200/50">
+                            {Object.keys(p.customFields).map(key => {
+                              const fConfig = patConfig?.fields?.find(f => f.name === key);
+                              const label = fConfig ? fConfig.label : key;
+                              return (
+                                <div key={key} className="flex gap-1.5">
+                                  <span className="font-bold text-slate-500">{label}:</span>
+                                  <span className="text-slate-800 font-medium">{p.customFields[key]}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
                         <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-warning-light text-warning border border-warning/10">{p.status}</span>
@@ -561,6 +820,20 @@ export const ResearchTracker = () => {
                                 <FileText size={10} className="shrink-0" /> {att.name || `Proof ${idx + 1}`}
                               </a>
                             ))}
+                          </div>
+                        )}
+                        {g.customFields && Object.keys(g.customFields).length > 0 && (
+                          <div className="mt-2 bg-slate-100/80 p-2 rounded-lg text-[10px] space-y-0.5 max-w-lg border border-slate-200/50">
+                            {Object.keys(g.customFields).map(key => {
+                              const fConfig = grantConfig?.fields?.find(f => f.name === key);
+                              const label = fConfig ? fConfig.label : key;
+                              return (
+                                <div key={key} className="flex gap-1.5">
+                                  <span className="font-bold text-slate-500">{label}:</span>
+                                  <span className="text-slate-800 font-medium">{g.customFields[key]}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
